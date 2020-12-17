@@ -18,13 +18,10 @@ class Hypercube:
     def neighbors(self, x: int, y: int, z: int, w: int) -> list:
         neighbors = []
         for w_c in range(w - 1 if w > 0 else w, w + 2 if w < self.frames - 1 else w + 1):
-            for z_c in range(z - 1 if z > 0 else z, z + 2 if z < self.height - 1 else z + 1):
-                for y_c in range(y - 1 if y > 0 else y, y + 2 if y < self.width - 1 else y + 1):
-                    for x_c in range(x - 1 if x > 0 else x, x + 2 if x < self.length - 1 else x + 1):
-                        if x_c == x and y_c == y and z_c == z and w_c == w:
-                            continue
-                    neighbors.append(self.cubes[w_c].layers[z_c].rows[y_c].cells[x_c])
-        print(len(neighbors))
+            for neighbor in self.cubes[w_c].neighbors(x, y, z):
+                neighbors.append(neighbor)
+            if w != w_c:
+                neighbors.append(self.cubes[w_c].layers[z].rows[y].cells[x])
         return neighbors
 
     def count_active_neighbors(self, x: int, y: int, z: int, w: int) -> int:
@@ -146,11 +143,9 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
         for j in range(len(data[i])):
             if data[i][j] == "#":
                 hypercube.set_active(j + 1, i + 1, 2, 2)
-    print(hypercube.neighbors(2, 2, 2, 2))
-    """
     for i in range(6):
         hypercube = hypercube.hypercube_cycle()
     return hypercube.active_count
-    """
+
 if __name__ == "__main__":
-    print(run_script("example.txt"))
+    print(run_script("input.txt"))
