@@ -4,22 +4,21 @@ from typing import Union
 
 class Tile:
 
-    
-
     def __init__(self, tile_id: int, data: list):
         self.tile_id = tile_id
         self.data = []
-        self.width = 10
-        for i in range(len(data)):
+        self.placed = False
+        self.width = len(data)
+        for i in range(self.width):
             self.data.append([])
-            for j in range(len(data[i])):
+            for j in range(self.width):
                 self.data[i].append(data[i][j])
         self.hashes = {}
         self.matches = {}
         ### LEFT
         hash_val_1 = 0
         hash_val_2 = 0
-        for i in range(len(data)):
+        for i in range(self.width):
             if data[i][0] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
@@ -27,7 +26,7 @@ class Tile:
         ### RIGHT
         hash_val_1 = 0
         hash_val_2 = 0
-        for i in range(len(data)):
+        for i in range(self.width):
             if data[i][9] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
@@ -35,7 +34,7 @@ class Tile:
         ### TOP
         hash_val_1 = 0
         hash_val_2 = 0
-        for i in range(len(data)):
+        for i in range(self.width):
             if data[0][i] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
@@ -43,18 +42,76 @@ class Tile:
         ### BOT
         hash_val_1 = 0
         hash_val_2 = 0
-        for i in range(len(data)):
+        for i in range(self.width):
             if data[9][i] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["bot"] = [hash_val_1, hash_val_2]
 
+    def flip_x(self):
+        new_data = []
+        for row in self.data:
+            new_data.append(row[::-1])
+        self.data = new_data
+        self.hashes["top"] = self.hashes["top"][::-1]
+        self.hashes["bot"] = self.hashes["bot"][::-1]
+        temp = [self.hashes["right"][0], self.hashes["right"][1]]
+        self.hashes["right"] = self.hashes["left"]
+        self.hashes["left"] = temp
+
+    def flip_y(self):
+        new_data = []
+        for i in range(self.width - 1, -1, -1):
+            new_data.append(self.data[i])
+        self.data = new_data
+        self.hashes["right"] = self.hashes["right"][::-1]
+        self.hashes["left"] = self.hashes["left"][::-1]
+        temp = [self.hashes["top"][0], self.hashes["top"][1]]
+        self.hashes["top"] = self.hashes["bot"]
+        self.hashes["bot"] = temp
+
+    def rotate_right(self):
+        # 0 0 becomes 9 0, 1 0 becomes 9 1
+        # 0 1 becomes 8 0, 1 1 becomes 8 1
+        new_data = []
+        for i in range(self.width):
+            new_data.append([])
+            for j in range(self.width):
+                new_data[i].append(self.data[self.width - 1 - j][i])
+        self.data = new_data
+        temp = [self.hashes["right"][1], self.hashes["right"][0]]
+        self.hashes["right"] = self.hashes["top"]
+        self.hashes["top"] = self.hashes["left"][::-1]
+        self.hashes["left"] = self.hashes["bot"]
+        self.hashes["bot"] = temp
+
+    def rotate_left(self):
+        # 0 0 becomes 0 9, 1 0 becomes 0 8
+        # 0 1 becomes 1 9, 1 1 becomes 1 8
+        new_data = []
+        for i in range(self.width):
+            new_data.append([])
+            for j in range(self.width):
+                new_data[i].append(self.data[j][self.width - 1 - i])
+        self.data = new_data
+        temp = [self.hashes["right"][0], self.hashes["right"][1]]
+        self.hashes["right"] = self.hashes["bot"][::-1]
+        self.hashes["bot"] = self.hashes["left"]
+        self.hashes["left"] = self.hashes["top"][::-1]
+        self.hashes["top"] = temp
+        
 
     def __str__(self):
         lines = [f"Tile {self.tile_id}:"]
         for i in range(len(self.data)):
             lines.append("".join([self.data[i][j] for j in range(len(self.data[i]))]))
-        return "\n".join(lines)
+        to_return = "\n".join(lines)
+        to_return += f"\nHashes right : {self.hashes['right']}"
+        to_return += f"\nHashes left : {self.hashes['left']}"
+        to_return += f"\nHashes top : {self.hashes['top']}"
+        to_return += f"\nHashes bot : {self.hashes['bot']}"
+        to_return += "\n"
+        return to_return
         
 
 def run_script(filepath: str) -> Union[int, str, float, bool]:
@@ -86,6 +143,11 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     result = 1
     for val in two_match:
         result *= val
+    print(tiles[0])
+    tiles[0].rotate_right()
+    print(tiles[0])
+    tiles[0].rotate_left()
+    print(tiles[0])
     print(f"Part 1 result: {result}")
 
 def parse_tiles(raw_tiles: list, tiles: list) -> None:
