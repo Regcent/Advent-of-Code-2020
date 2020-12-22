@@ -16,9 +16,18 @@ class CardDeck:
     def empty(self) -> bool:
         return len(self.cards) == 0
 
+    def size(self) -> int:
+        return len(self.cards)
+
     def score(self) -> int:
         card_count = len(self.cards)
         return sum([self.cards[i] * (card_count - i) for i in range(card_count)])
+
+    def sub_deck(self, size: int) -> int:
+        new_deck = CardDeck()
+        for i in range(size):
+            new_deck.put(self.cards[i])
+        return new_deck
 
 def run_script(filepath: str) -> Union[int, str, float, bool]:
     with open(filepath, "r") as f:
@@ -44,22 +53,31 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     winner = resolve_game(p1_deck, p2_deck)
     return p1_deck.score() if winner == 1 else p2_deck.score()
 
-def resolve_game(p1_deck: Queue, p2_deck: Queue) -> int:
+def resolve_game(p1_deck: CardDeck, p2_deck: CardDeck) -> int:
     while not p1_deck.empty() and not p2_deck.empty():
         resolve_turn(p1_deck, p2_deck)
     return 1 if p2_deck.empty() else 2
 
-def resolve_turn(p1_deck: Queue, p2_deck: Queue) -> None:
+def resolve_turn(p1_deck: CardDeck, p2_deck: CardDeck) -> None:
     p1_card = p1_deck.get()
     p2_card = p2_deck.get()
-    if p1_card > p2_card:
-        p1_deck.put(p1_card)
-        p1_deck.put(p2_card)
-        return 1
+    if p1_card <= p1_deck.size() and p2_card <= p2_deck.size():
+        sub_winner = resolve_game(p1_deck.sub_deck(p1_card), p2_deck.sub_deck(p2_card))
+        if sub_winner == 1:
+            p1_deck.put(p1_card)
+            p1_deck.put(p2_card)
+        else:
+            p2_deck.put(p2_card)
+            p2_deck.put(p1_card)
     else:
-        p2_deck.put(p2_card)
-        p2_deck.put(p1_card)
-        return 2
+        if p1_card > p2_card:
+            p1_deck.put(p1_card)
+            p1_deck.put(p2_card)
+            return 1
+        else:
+            p2_deck.put(p2_card)
+            p2_deck.put(p1_card)
+            return 2
 
 def parse_deck(raw_deck: list) -> CardDeck:
     deck = CardDeck()
@@ -68,4 +86,4 @@ def parse_deck(raw_deck: list) -> CardDeck:
     return deck
 
 if __name__ == "__main__":
-    print(run_script("input.txt"))
+    print(run_script("example.txt"))
