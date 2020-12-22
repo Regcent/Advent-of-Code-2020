@@ -2,6 +2,24 @@ import time
 from typing import Union
 from queue import Queue
 
+class CardDeck:
+
+    def __init__(self):
+        self.cards = []
+
+    def put(self, card: int) -> None:
+        self.cards.append(card)
+    
+    def get(self) -> int:
+        return self.cards.pop(0)
+
+    def empty(self) -> bool:
+        return len(self.cards) == 0
+
+    def score(self) -> int:
+        card_count = len(self.cards)
+        return sum([self.cards[i] * (card_count - i) for i in range(card_count)])
+
 def run_script(filepath: str) -> Union[int, str, float, bool]:
     with open(filepath, "r") as f:
         raw_data = f.read()
@@ -24,16 +42,7 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     p1_deck = parse_deck(raw_deck_p1)
     p2_deck = parse_deck(raw_deck_p2)
     winner = resolve_game(p1_deck, p2_deck)
-    score = 0
-    if winner == 2:
-        winning_deck = p2_deck
-    else:
-        winning_deck = p1_deck
-    score_factor = winning_deck.qsize()
-    while not winning_deck.empty():
-        score += score_factor * winning_deck.get()
-        score_factor -= 1
-    return score
+    return p1_deck.score() if winner == 1 else p2_deck.score()
 
 def resolve_game(p1_deck: Queue, p2_deck: Queue) -> int:
     while not p1_deck.empty() and not p2_deck.empty():
@@ -52,8 +61,8 @@ def resolve_turn(p1_deck: Queue, p2_deck: Queue) -> None:
         p2_deck.put(p1_card)
         return 2
 
-def parse_deck(raw_deck: list) -> Queue:
-    deck = Queue()
+def parse_deck(raw_deck: list) -> CardDeck:
+    deck = CardDeck()
     for raw_card in raw_deck.split("\n")[1:]:
         deck.put(int(raw_card))
     return deck
