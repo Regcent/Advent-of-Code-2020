@@ -151,11 +151,11 @@ def parse_tiles(raw_tiles: list, tiles: dict) -> None:
         tile_id = int(lines[0].split(" ")[1][:-1])
         tiles[tile_id] = Tile(tile_id, lines[1:])
 
-def match_tiles_with_flip_rotate(tiles_dict: dict) -> Tile:
+def match_tiles_with_flip_rotate(tiles_dict: dict) -> int:
     fully_matched = []
     tiles_count = len(list(tiles_dict))
     next_tiles = [list(tiles_dict)[0]]
-    top_left = None
+    top_left_id = -1
     counter = 0
     while True:
         current = tiles_dict[next_tiles[counter]]
@@ -184,13 +184,13 @@ def match_tiles_with_flip_rotate(tiles_dict: dict) -> Tile:
                     next_tiles.append(match_id)
         fully_matched.append(current.tile_id)
         match_list = list(current.matches)
-        counter += 1
         if len(match_list) == 2:
             if "right" and "bot" in match_list:
-                top_left = current
+                top_left_id = next_tiles[counter]
         if len(fully_matched) == tiles_count:
             break
-    return top_left
+        counter += 1
+    return top_left_id
         
 def pair(origin: Tile, match: Tile, target_side: str) -> None:
     if target_side == "right":
