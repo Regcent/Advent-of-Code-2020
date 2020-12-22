@@ -1,14 +1,13 @@
 import time
 from typing import Union
 
-
 class Tile:
 
     def __init__(self, tile_id: int, data: list):
         self.tile_id = tile_id
         self.data = []
-        self.placed = False
         self.width = len(data)
+        self.placed = False
         for i in range(self.width):
             self.data.append([])
             for j in range(self.width):
@@ -47,6 +46,9 @@ class Tile:
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["bot"] = [hash_val_1, hash_val_2]
+
+    def __eq__(self, other):
+        return self.tile_id == other.tile_id
 
     def flip_x(self):
         new_data = []
@@ -100,7 +102,6 @@ class Tile:
         self.hashes["left"] = self.hashes["top"][::-1]
         self.hashes["top"] = temp
         
-
     def __str__(self):
         lines = [f"Tile {self.tile_id}:"]
         for i in range(len(self.data)):
@@ -134,7 +135,7 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     """
     tiles = []
     parse_tiles(raw_data.split("\n\n"), tiles)
-    match_tiles(tiles)
+    top_left = match_tiles_with_flip_rotate(tiles)
     two_match = []
     for i in range(len(tiles)):
         if len(list(tiles[i].matches.keys())) == 2:
@@ -143,11 +144,6 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     result = 1
     for val in two_match:
         result *= val
-    print(tiles[0])
-    tiles[0].rotate_right()
-    print(tiles[0])
-    tiles[0].rotate_left()
-    print(tiles[0])
     print(f"Part 1 result: {result}")
 
 def parse_tiles(raw_tiles: list, tiles: list) -> None:
@@ -176,6 +172,72 @@ def match_tiles(tiles: list) -> None:
                             match_found = True
                             tiles[i].matches[target_side] = tiles[j].tile_id
                             tiles[j].matches[test_side] = tiles[i].tile_id
+
+def match_tiles_with_flip_rotate(tiles: list) -> Tile:
+    tiles_dict = {}
+    for tile in tiles:
+        tiles_dict[tile.tile_id] = tile
+    fully_matched = []
+    next_tiles = [tiles[0].tile_id]
+    top_left = None
+    counter = 0
+    while True:
+        current = tiles_dict[next_tiles[counter]]
+        for target_side in ["right", "left", "top", "bot"]:
+            if target_side in current.matches:
+                continue
+            hash_target = current.hashes[target_side][0]
+            match_id = 0
+            for tile in tiles:
+                if match_id:
+                    break
+                if tile == current:
+                    continue
+                if len(tile.matches) == 4:
+                    continue
+                for test_side in tile.hashes:
+                    if match_id:
+                        break
+                    for val in tile.hashes[test_side]:
+                        if hash_target == val:
+                            match_id = tile.tile_id
+                            pair(current, tile, target_side)
+            if match_id:
+                if match_id not in next_tiles:
+                    next_tiles.append(match_id)
+        fully_matched.append(current.tile_id)
+        match_list = list(current.matches)
+        counter += 1
+        if len(match_list) == 2:
+            if "right" and "bot" in match_list:
+                top_left = current
+        if len(fully_matched) == len(tiles):
+            break
+        
+def pair(origin: Tile, match: Tile, target_side: str) -> None:
+    if target_side == "right":
+        test_side = "left"
+    elif target_side == "top":
+        test_side = "bot"
+    elif target_side == "left":
+        test_side = "right"
+    else:
+        test_side = "top"
+    if match.placed and origin.hashes[target_side][0] != match.hashes[test_side][0]:
+        print(f"Error : Match {match.tile_id} is already placed, shall not be rotated or flipped")
+    target_hash = origin.hashes[target_side][0]
+    while target_hash not in match.hashes[test_side]:
+        match.rotate_left()
+    if target_hash == match.hashes[test_side][1]:
+        if test_side in ["right", "left"]:
+            match.flip_y()
+        else:
+            match.flip_x()
+    origin.matches[target_side] = match.tile_id
+    match.matches[test_side] = origin.tile_id
+    origin.placed = True
+    match.placed = True
+    
 
 if __name__ == "__main__":
     print(run_script("input.txt"))
