@@ -48,7 +48,7 @@ class Tile:
 
     def trim(self):
         self.data = [line[1:-1] for line in self.data[1:-1]]
-        
+
     def __eq__(self, other):
         return self.tile_id == other.tile_id
 
@@ -147,7 +147,7 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     for val in two_match:
         result *= val
     print(f"Part 1 result: {result}")
-    image = basic_build_image(tiles, top_left_id)
+    image = build_image(tiles, top_left_id)
     print(image)
 
 def basic_build_image(tiles: dict, top_left_id: int) -> str:
@@ -169,6 +169,30 @@ def basic_build_image(tiles: dict, top_left_id: int) -> str:
         else:
             break
     return "\n".join(["\t".join([str(i) for i in line]) for line in lines])
+
+def build_image(tiles: dict, top_left_id: int) -> Tile:
+    left_tile = tiles[top_left_id]
+    lines = []
+    i = 0
+    while True:
+        for j in range(8):
+            lines.append([])
+        current_tile = left_tile
+        while True:
+            current_tile.trim()
+            for j in range(8):
+                for k in range(8):
+                    lines[8*i + j].append(current_tile.data[j][k])
+            if "right" in current_tile.matches:
+                current_tile = tiles[current_tile.matches["right"]]
+            else:
+                break
+        if "bot" in left_tile.matches:
+            left_tile = tiles[left_tile.matches["bot"]]
+            i += 1
+        else:
+            break
+    return Tile(1, lines)
 
 def parse_tiles(raw_tiles: list, tiles: dict) -> None:
     for raw_tile in raw_tiles:
