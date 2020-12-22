@@ -7,7 +7,6 @@ class Tile:
         self.tile_id = tile_id
         self.data = []
         self.width = len(data)
-        self.placed = False
         for i in range(self.width):
             self.data.append([])
             for j in range(self.width):
@@ -133,52 +132,29 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     """
     Time to code! Write your code here to solve today's problem
     """
-    tiles = []
+    tiles = {}
     parse_tiles(raw_data.split("\n\n"), tiles)
     top_left = match_tiles_with_flip_rotate(tiles)
     two_match = []
-    for i in range(len(tiles)):
-        if len(list(tiles[i].matches.keys())) == 2:
-            two_match.append(tiles[i].tile_id)
+    for tile_id in tiles:
+        if len(list(tiles[tile_id].matches.keys())) == 2:
+            two_match.append(tile_id)
     print(f"Corners : {', '.join([str(i) for i in two_match])}")
     result = 1
     for val in two_match:
         result *= val
     print(f"Part 1 result: {result}")
 
-def parse_tiles(raw_tiles: list, tiles: list) -> None:
+def parse_tiles(raw_tiles: list, tiles: dict) -> None:
     for raw_tile in raw_tiles:
         lines = raw_tile.split("\n")
         tile_id = int(lines[0].split(" ")[1][:-1])
-        tiles.append(Tile(tile_id, lines[1:]))
+        tiles[tile_id] = Tile(tile_id, lines[1:])
 
-def match_tiles(tiles: list) -> None:
-    for i in range(len(tiles) - 1):
-        for j in range(i + 1, len(tiles)):
-            for target_side in tiles[i].hashes:
-                if target_side in tiles[i].matches:
-                    continue
-                hash_target = tiles[i].hashes[target_side][0]
-                match_found = False
-                if match_found:
-                    break
-                for test_side in tiles[j].hashes:
-                    if test_side in tiles[j].matches:
-                        continue
-                    if match_found:
-                        break
-                    for val in tiles[j].hashes[test_side]:
-                        if hash_target == val:
-                            match_found = True
-                            tiles[i].matches[target_side] = tiles[j].tile_id
-                            tiles[j].matches[test_side] = tiles[i].tile_id
-
-def match_tiles_with_flip_rotate(tiles: list) -> Tile:
-    tiles_dict = {}
-    for tile in tiles:
-        tiles_dict[tile.tile_id] = tile
+def match_tiles_with_flip_rotate(tiles_dict: dict) -> Tile:
     fully_matched = []
-    next_tiles = [tiles[0].tile_id]
+    tiles_count = len(list(tiles_dict))
+    next_tiles = [list(tiles_dict)[0]]
     top_left = None
     counter = 0
     while True:
@@ -188,10 +164,11 @@ def match_tiles_with_flip_rotate(tiles: list) -> Tile:
                 continue
             hash_target = current.hashes[target_side][0]
             match_id = 0
-            for tile in tiles:
+            for tile_id in tiles_dict:
+                tile = tiles_dict[tile_id]
                 if match_id:
                     break
-                if tile == current:
+                if tile_id == next_tiles[counter]:
                     continue
                 if len(tile.matches) == 4:
                     continue
@@ -211,8 +188,9 @@ def match_tiles_with_flip_rotate(tiles: list) -> Tile:
         if len(match_list) == 2:
             if "right" and "bot" in match_list:
                 top_left = current
-        if len(fully_matched) == len(tiles):
+        if len(fully_matched) == tiles_count:
             break
+    return top_left
         
 def pair(origin: Tile, match: Tile, target_side: str) -> None:
     if target_side == "right":
@@ -223,8 +201,6 @@ def pair(origin: Tile, match: Tile, target_side: str) -> None:
         test_side = "right"
     else:
         test_side = "top"
-    if match.placed and origin.hashes[target_side][0] != match.hashes[test_side][0]:
-        print(f"Error : Match {match.tile_id} is already placed, shall not be rotated or flipped")
     target_hash = origin.hashes[target_side][0]
     while target_hash not in match.hashes[test_side]:
         match.rotate_left()
@@ -235,8 +211,6 @@ def pair(origin: Tile, match: Tile, target_side: str) -> None:
             match.flip_x()
     origin.matches[target_side] = match.tile_id
     match.matches[test_side] = origin.tile_id
-    origin.placed = True
-    match.placed = True
     
 
 if __name__ == "__main__":
