@@ -46,6 +46,9 @@ class Tile:
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["bot"] = [hash_val_1, hash_val_2]
 
+    def trim(self):
+        self.data = [line[1:-1] for line in self.data[1:-1]]
+        
     def __eq__(self, other):
         return self.tile_id == other.tile_id
 
@@ -134,7 +137,7 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     """
     tiles = {}
     parse_tiles(raw_data.split("\n\n"), tiles)
-    top_left = match_tiles_with_flip_rotate(tiles)
+    top_left_id = match_tiles_with_flip_rotate(tiles)
     two_match = []
     for tile_id in tiles:
         if len(list(tiles[tile_id].matches.keys())) == 2:
@@ -144,6 +147,28 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     for val in two_match:
         result *= val
     print(f"Part 1 result: {result}")
+    image = basic_build_image(tiles, top_left_id)
+    print(image)
+
+def basic_build_image(tiles: dict, top_left_id: int) -> str:
+    left_tile = tiles[top_left_id]
+    lines = []
+    i = 0
+    while True:
+        lines.append([])
+        current_tile = left_tile
+        while True:
+            lines[i].append(current_tile.tile_id)
+            if "right" in current_tile.matches:
+                current_tile = tiles[current_tile.matches["right"]]
+            else:
+                break
+        if "bot" in left_tile.matches:
+            left_tile = tiles[left_tile.matches["bot"]]
+            i += 1
+        else:
+            break
+    return "\n".join(["\t".join([str(i) for i in line]) for line in lines])
 
 def parse_tiles(raw_tiles: list, tiles: dict) -> None:
     for raw_tile in raw_tiles:
@@ -214,4 +239,4 @@ def pair(origin: Tile, match: Tile, target_side: str) -> None:
     
 
 if __name__ == "__main__":
-    print(run_script("input.txt"))
+    print(run_script("example.txt"))
