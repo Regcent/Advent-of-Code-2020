@@ -1,17 +1,17 @@
 import time
 from typing import Union
-from queue import Queue
+from collections import deque
 
 class CardDeck:
 
     def __init__(self):
-        self.cards = []
+        self.cards = deque([])
 
     def put(self, card: int) -> None:
         self.cards.append(card)
     
     def get(self) -> int:
-        return self.cards.pop(0)
+        return self.cards.popleft()
 
     def empty(self) -> bool:
         return len(self.cards) == 0
@@ -71,9 +71,6 @@ def resolve_game(p1_deck: CardDeck, p2_deck: CardDeck) -> int:
     states = []
     i = 0
     while not p1_deck.empty() and not p2_deck.empty():
-        print(f"Turn {i}")
-        print(f"Player 1 : {str(p1_deck)}")
-        print(f"Player 2 : {str(p2_deck)}")
         for state in states:
             if p1_deck == state[0]:
                 if p2_deck == state[1]:
@@ -98,11 +95,9 @@ def resolve_turn(p1_deck: CardDeck, p2_deck: CardDeck) -> None:
         if p1_card > p2_card:
             p1_deck.put(p1_card)
             p1_deck.put(p2_card)
-            return 1
         else:
             p2_deck.put(p2_card)
             p2_deck.put(p1_card)
-            return 2
 
 def parse_deck(raw_deck: list) -> CardDeck:
     deck = CardDeck()
