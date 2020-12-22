@@ -23,17 +23,9 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     raw_deck_p1, raw_deck_p2 = raw_data.split("\n\n")
     p1_deck = parse_deck(raw_deck_p1)
     p2_deck = parse_deck(raw_deck_p2)
-    while not p1_deck.empty() and not p2_deck.empty():
-        p1_card = p1_deck.get()
-        p2_card = p2_deck.get()
-        if p1_card > p2_card:
-            p1_deck.put(p1_card)
-            p1_deck.put(p2_card)
-        else:
-            p2_deck.put(p2_card)
-            p2_deck.put(p1_card)
+    winner = resolve_game(p1_deck, p2_deck)
     score = 0
-    if p1_deck.empty():
+    if winner == 2:
         winning_deck = p2_deck
     else:
         winning_deck = p1_deck
@@ -43,6 +35,22 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
         score_factor -= 1
     return score
 
+def resolve_game(p1_deck: Queue, p2_deck: Queue) -> int:
+    while not p1_deck.empty() and not p2_deck.empty():
+        resolve_turn(p1_deck, p2_deck)
+    return 1 if p2_deck.empty() else 2
+
+def resolve_turn(p1_deck: Queue, p2_deck: Queue) -> None:
+    p1_card = p1_deck.get()
+    p2_card = p2_deck.get()
+    if p1_card > p2_card:
+        p1_deck.put(p1_card)
+        p1_deck.put(p2_card)
+        return 1
+    else:
+        p2_deck.put(p2_card)
+        p2_deck.put(p1_card)
+        return 2
 
 def parse_deck(raw_deck: list) -> Queue:
     deck = Queue()
