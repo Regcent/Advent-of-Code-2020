@@ -23,11 +23,25 @@ class CardDeck:
         card_count = len(self.cards)
         return sum([self.cards[i] * (card_count - i) for i in range(card_count)])
 
-    def sub_deck(self, size: int) -> int:
+    def sub_deck(self, size: int):
         new_deck = CardDeck()
         for i in range(size):
             new_deck.put(self.cards[i])
         return new_deck
+
+    def copy(self):
+        return self.sub_deck(len(self.cards))
+
+    def __eq__(self, other) -> bool:
+        if len(self.cards) != len(other.cards):
+            return False
+        for i in range(len(self.cards)):
+            if self.cards[i] != other.cards[i]:
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return ", ".join([str(i) for i in self.cards])
 
 def run_script(filepath: str) -> Union[int, str, float, bool]:
     with open(filepath, "r") as f:
@@ -54,8 +68,19 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     return p1_deck.score() if winner == 1 else p2_deck.score()
 
 def resolve_game(p1_deck: CardDeck, p2_deck: CardDeck) -> int:
+    states = []
+    i = 0
     while not p1_deck.empty() and not p2_deck.empty():
+        print(f"Turn {i}")
+        print(f"Player 1 : {str(p1_deck)}")
+        print(f"Player 2 : {str(p2_deck)}")
+        for state in states:
+            if p1_deck == state[0]:
+                if p2_deck == state[1]:
+                    return 1
+        states.append((p1_deck.copy(), p2_deck.copy()))
         resolve_turn(p1_deck, p2_deck)
+        i += 1
     return 1 if p2_deck.empty() else 2
 
 def resolve_turn(p1_deck: CardDeck, p2_deck: CardDeck) -> None:
@@ -86,4 +111,4 @@ def parse_deck(raw_deck: list) -> CardDeck:
     return deck
 
 if __name__ == "__main__":
-    print(run_script("example.txt"))
+    print(run_script("input.txt"))
