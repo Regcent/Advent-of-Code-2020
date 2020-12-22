@@ -68,16 +68,13 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     return p1_deck.score() if winner == 1 else p2_deck.score()
 
 def resolve_game(p1_deck: CardDeck, p2_deck: CardDeck) -> int:
-    states = []
-    i = 0
+    states = set()
     while not p1_deck.empty() and not p2_deck.empty():
-        for state in states:
-            if p1_deck == state[0]:
-                if p2_deck == state[1]:
-                    return 1
-        states.append((p1_deck.copy(), p2_deck.copy()))
+        current_state = (p1_deck.score(), p2_deck.score())
+        if current_state in states:
+            return 1
+        states.add(current_state)
         resolve_turn(p1_deck, p2_deck)
-        i += 1
     return 1 if p2_deck.empty() else 2
 
 def resolve_turn(p1_deck: CardDeck, p2_deck: CardDeck) -> None:
