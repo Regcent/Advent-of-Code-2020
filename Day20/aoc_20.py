@@ -7,17 +7,22 @@ class Tile:
         self.tile_id = tile_id
         self.data = []
         self.width = len(data)
+        self.hash_count = 0
         for i in range(self.width):
             self.data.append([])
-            for j in range(self.width):
+            for j in range(len(data[i])):
                 self.data[i].append(data[i][j])
+                if data[i][j] == "#":
+                    self.hash_count += 1
+
+    def calculate_hashes(self):
         self.hashes = {}
         self.matches = {}
         ### LEFT
         hash_val_1 = 0
         hash_val_2 = 0
         for i in range(self.width):
-            if data[i][0] == "#":
+            if self.data[i][0] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["left"] = [hash_val_1, hash_val_2]
@@ -25,7 +30,7 @@ class Tile:
         hash_val_1 = 0
         hash_val_2 = 0
         for i in range(self.width):
-            if data[i][9] == "#":
+            if self.data[i][9] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["right"] = [hash_val_1, hash_val_2]
@@ -33,7 +38,7 @@ class Tile:
         hash_val_1 = 0
         hash_val_2 = 0
         for i in range(self.width):
-            if data[0][i] == "#":
+            if self.data[0][i] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["top"] = [hash_val_1, hash_val_2]
@@ -41,7 +46,7 @@ class Tile:
         hash_val_1 = 0
         hash_val_2 = 0
         for i in range(self.width):
-            if data[9][i] == "#":
+            if self.data[9][i] == "#":
                 hash_val_1 += 2 ** i
                 hash_val_2 += 2 ** (self.width - 1 - i)
         self.hashes["bot"] = [hash_val_1, hash_val_2]
@@ -109,10 +114,13 @@ class Tile:
         for i in range(len(self.data)):
             lines.append("".join([self.data[i][j] for j in range(len(self.data[i]))]))
         to_return = "\n".join(lines)
-        to_return += f"\nHashes right : {self.hashes['right']}"
-        to_return += f"\nHashes left : {self.hashes['left']}"
-        to_return += f"\nHashes top : {self.hashes['top']}"
-        to_return += f"\nHashes bot : {self.hashes['bot']}"
+        try:
+            to_return += f"\nHashes right : {self.hashes['right']}"
+            to_return += f"\nHashes left : {self.hashes['left']}"
+            to_return += f"\nHashes top : {self.hashes['top']}"
+            to_return += f"\nHashes bot : {self.hashes['bot']}"
+        except:
+            pass
         to_return += "\n"
         return to_return
         
@@ -148,7 +156,74 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
         result *= val
     print(f"Part 1 result: {result}")
     image = build_image(tiles, top_left_id)
-    print(image)
+    image.calculate_hashes()
+    monster_count = count_sea_monsters(image)
+    print(f"Part 2 result : {image.hash_count - monster_count * 15}")
+
+def count_sea_monsters(image: Tile) -> int:
+    sea_monster_length = 20
+    monster_count = 0
+    flip = 1
+    while True:
+        for i in range(1, len(image.data) - 1):
+            for j in range(len(image.data) - sea_monster_length):
+                if image.data[i][j] == "#":
+                    if check_monster(image, i, j):
+                        monster_count += 1
+        if monster_count != 0:
+            break
+        if flip == 0:
+            image.rotate_left()
+            print("Rotate image")
+            flip = 1
+        elif flip == 1:
+            image.flip_y()
+            flip = 2
+        elif flip == 2:
+            image.flip_x()
+            flip = 3
+        else:
+            image.flip_y()
+            flip = 0
+    return monster_count
+
+def test_sea_monster_check():
+    with open("sea_monster.txt") as f:
+        test_tile = Tile(10, f.read().split("\n"))
+        print(test_tile)
+        assert(check_monster(test_tile, 1, 0))
+
+def check_monster(image: Tile, line: int, row: int) -> bool:
+    if image.data[line + 1][row + 1] != "#":
+        return False
+    if image.data[line + 1][row + 4] != "#":
+        return False
+    if image.data[line][row + 5] != "#":
+        return False
+    if image.data[line][row + 6] != "#":
+        return False
+    if image.data[line + 1][row + 7] != "#":
+        return False
+    if image.data[line + 1][row + 10] != "#":
+        return False
+    if image.data[line][row + 11] != "#":
+        return False
+    if image.data[line][row + 12] != "#":
+        return False
+    if image.data[line + 1][row + 13] != "#":
+        return False
+    if image.data[line + 1][row + 16] != "#":
+        return False
+    if image.data[line][row + 17] != "#":
+        return False
+    if image.data[line][row + 18] != "#":
+        return False
+    if image.data[line - 1][row + 18] != "#":
+        return False
+    if image.data[line][row + 19] != "#":
+        return False
+    return True
+
 
 def basic_build_image(tiles: dict, top_left_id: int) -> str:
     left_tile = tiles[top_left_id]
@@ -199,6 +274,7 @@ def parse_tiles(raw_tiles: list, tiles: dict) -> None:
         lines = raw_tile.split("\n")
         tile_id = int(lines[0].split(" ")[1][:-1])
         tiles[tile_id] = Tile(tile_id, lines[1:])
+        tiles[tile_id].calculate_hashes()
 
 def match_tiles_with_flip_rotate(tiles_dict: dict) -> int:
     fully_matched = []
@@ -263,4 +339,4 @@ def pair(origin: Tile, match: Tile, target_side: str) -> None:
     
 
 if __name__ == "__main__":
-    print(run_script("example.txt"))
+    print(run_script("input.txt"))
