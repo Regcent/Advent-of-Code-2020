@@ -27,13 +27,14 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     Time to code! Write your code here to solve today's problem
     """
     cups = initialize_cups(9, raw_data, True)
+    pretty_print_cups(cups, 10)
 
 def initialize_cups(count: int, raw_data: str, part1: bool) -> list:
     cups = [Cup(i, 1, count) for i in range(1, count + 1)]
     for i in range(1, len(raw_data) - 1):
         current_cup = get_labeled_cup(cups, int(raw_data[i]))
         current_cup.previous = int(raw_data[i-1])
-        current_cup.next = int(raw_data[i+1])*
+        current_cup.next = int(raw_data[i+1])
     if part1:
         first_cup = get_labeled_cup(cups, int(raw_data[0]))
         first_cup.previous = int(raw_data[-1])
@@ -50,13 +51,15 @@ def initialize_cups(count: int, raw_data: str, part1: bool) -> list:
         last_cup.next = len(raw_data)
     return cups
 
-def pretty_print_cups(cups: int, count: int):
-    labels = [cups[0].label]
-    current_cup = cups[0].next
+def pretty_print_cups(cups: int, count: int) -> None:
+    labels = [str(cups[0].label)]
+    current_cup = get_labeled_cup(cups, cups[0].next)
     i = 1
     while not current_cup == cups[0] and i < count:
-        labels.append(current_cup.label)
+        labels.append(str(current_cup.label))
+        current_cup = get_labeled_cup(cups, current_cup.next)
         i += 1
+    print("Cups : " + ", ".join(labels))
 
 def get_labeled_cup(cups: list, label: int) -> Cup:
     return cups[label - 1]
