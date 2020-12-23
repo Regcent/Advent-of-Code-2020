@@ -30,6 +30,10 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     current_cup_label = int(raw_data[0])
     perform_game(cups, current_cup_label, 100)
     print(f"Result Part 1 : {prepare_result_1(cups)}")
+    cups = initialize_cups(1000000, raw_data, False)
+    current_cup_label = int(raw_data[0])
+    perform_game(cups, current_cup_label, 10000000)
+    print(f"Result Part 2 : {prepare_result_2(cups)}")
 
 def perform_game(cups: list, current_cup_label: int, turns: int) -> None:
     max_label = len(cups)
@@ -92,7 +96,8 @@ def initialize_cups(count: int, raw_data: str, part1: bool) -> list:
         first_cup.next = int(raw_data[1])
         last_cup = get_labeled_cup(cups, int(raw_data[-1]))
         last_cup.previous = int(raw_data[-2])
-        last_cup.next = len(raw_data)
+        last_cup.next = len(raw_data) + 1
+        get_labeled_cup(cups, count).next = int(raw_data[0])
     return cups
 
 def pretty_print_cups(cups: list, count: int) -> None:
@@ -112,9 +117,17 @@ def prepare_result_1(cups: list) -> str:
         labels.append(str(current_cup.label))
         current_cup = get_labeled_cup(cups, current_cup.next)
     return "".join(labels)
-    
+
+def prepare_result_2(cups: list) -> str:
+    current_label = 1
+    total = 1
+    for i in range(2):
+        current_label = get_labeled_cup(cups, current_label).next
+        total *= current_label
+    return total
+
 def get_labeled_cup(cups: list, label: int) -> Cup:
     return cups[label - 1]
 
 if __name__ == "__main__":
-    print(run_script("example.txt"))
+    print(run_script("input.txt"))
