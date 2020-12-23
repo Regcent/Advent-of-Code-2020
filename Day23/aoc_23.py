@@ -5,7 +5,6 @@ class Cup:
 
     def __init__(self, label: int, min_label: int, max_label: int):
         self.label = label
-        self.previous = max_label if label == min_label else label - 1
         self.next = min_label if label == max_label else label + 1
 
 def run_script(filepath: str) -> Union[int, str, float, bool]:
@@ -68,34 +67,26 @@ def perform_transformation(cups: list, current_cup_label: int, selected_cups_lab
     #Remove the selected cups
     last_selected_cup = get_labeled_cup(cups, selected_cups_labels[-1])
     get_labeled_cup(cups, current_cup_label).next = last_selected_cup.next
-    get_labeled_cup(cups, last_selected_cup.next).previous = current_cup_label
     #Insert the selected cups
     destination_cup = get_labeled_cup(cups, destination_label)
     destination_neighbor_label = destination_cup.next
     destination_cup.next = selected_cups_labels[0]
-    get_labeled_cup(cups, selected_cups_labels[0]).previous = destination_label
     last_selected_cup.next = destination_neighbor_label
-    get_labeled_cup(cups, destination_neighbor_label).previous = selected_cups_labels[-1]
 
 def initialize_cups(count: int, raw_data: str, part1: bool) -> list:
     cups = [Cup(i, 1, count) for i in range(1, count + 1)]
     for i in range(1, len(raw_data) - 1):
         current_cup = get_labeled_cup(cups, int(raw_data[i]))
-        current_cup.previous = int(raw_data[i-1])
         current_cup.next = int(raw_data[i+1])
     if part1:
         first_cup = get_labeled_cup(cups, int(raw_data[0]))
-        first_cup.previous = int(raw_data[-1])
         first_cup.next = int(raw_data[1])
         last_cup = get_labeled_cup(cups, int(raw_data[-1]))
-        last_cup.previous = int(raw_data[-2])
         last_cup.next = int(raw_data[0])
     else:
         first_cup = get_labeled_cup(cups, int(raw_data[0]))
-        first_cup.previous = count
         first_cup.next = int(raw_data[1])
         last_cup = get_labeled_cup(cups, int(raw_data[-1]))
-        last_cup.previous = int(raw_data[-2])
         last_cup.next = len(raw_data) + 1
         get_labeled_cup(cups, count).next = int(raw_data[0])
     return cups
