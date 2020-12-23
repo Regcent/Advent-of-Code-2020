@@ -28,6 +28,24 @@ def your_script(raw_data: str) -> Union[int, str, float, bool]:
     """
     cups = initialize_cups(9, raw_data, True)
     pretty_print_cups(cups, 10)
+    current_cup_label = int(raw_data[0])
+    perform_game(cups, current_cup_label, 1)
+
+def perform_game(cups: list, current_cup_label: int, turns: int) -> None:
+    for i in range(turns):
+        print(f"\nRound {i}")
+        pretty_print_cups(cups, 10)
+        print(f"Current cup : {current_cup_label}")
+        selected_cups_labels = select_cups(cups, current_cup_label)
+        print(f"Selected : {selected_cups_labels}")
+
+def select_cups(cups: list, current_cup_label: int) -> list:
+    selected_cups_labels = []
+    current_cup = get_labeled_cup(cups, current_cup_label)
+    for i in range(3):
+        current_cup = get_labeled_cup(cups, current_cup.next)
+        selected_cups_labels.append(current_cup.label)
+    return selected_cups_labels
 
 def initialize_cups(count: int, raw_data: str, part1: bool) -> list:
     cups = [Cup(i, 1, count) for i in range(1, count + 1)]
